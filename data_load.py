@@ -11,8 +11,8 @@ DEVICE     = "cuda" if torch.cuda.is_available() else "cpu"
 transform = transforms.Compose([
     transforms.Resize(IMG_SIZE),
     transforms.CenterCrop(IMG_SIZE),
-    transforms.ToTensor(),               # [0,1]
-    transforms.Normalize([0.5]*3, [0.5]*3)  # scale to [-1,1]
+    transforms.ToTensor(),               
+    transforms.Normalize([0.5]*3, [0.5]*3)  
 ])
 
 celeba = datasets.CelebA(root="data", split="validation", download=True, transform=transform)
