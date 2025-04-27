@@ -25,23 +25,25 @@ class SimpleUNet(nn.Module):
         h = torch.relu(self.down2(h) + t_emb.view(-1, t_emb.shape[-1], 1, 1))
         h = torch.relu(self.up1(h))
         return self.up2(h)  
+    
 
 
-from tqdm import tqdm
-import random
-from kernel import blur_function
+# from tqdm import tqdm
+# import random
+# from kernel import swirl_function
+# import torch.nn as nn
 
-def training_loop(model, loader, optimizer, device):
-    for epoch in range(20):
-        progressbar = tqdm(loader)
-        for x0, _ in progressbar:
-            x0 = x0.to(device)
-            s = random.randint(1, T_STEPS)
-            xs = blur_function(x0, s)                    
-            x_pred = model(xs, torch.tensor([s]*x0.size(0), device=device))
-            # Make L1 loss function later
-            loss = l1(x_pred, x0)            
-            optimizer.zero_grad()
-            loss.backward()
-            optimizer.step()
-            progressbar.set_description(f"Epoch {epoch} Loss {loss.item():.4f}")
+# l1 = nn.L1Loss()
+# def training_loop(model, loader, optimizer, device):
+#     for epoch in range(20):
+#         progressbar = tqdm(loader)
+#         for x0, _ in progressbar:
+#             x0 = x0.to(device)
+#             s = random.randint(1, T_STEPS)
+#             xs = swirl_function(x0, s)                    
+#             x_pred = model(xs, torch.tensor([s]*x0.size(0), device=device))
+#             loss = l1(x_pred, x0)            
+#             optimizer.zero_grad()
+#             loss.backward()
+#             optimizer.step()
+#             progressbar.set_description(f"Epoch {epoch} Loss {loss.item():.4f}")

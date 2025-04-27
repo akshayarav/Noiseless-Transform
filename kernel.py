@@ -27,3 +27,37 @@ def blur_function(x: torch.Tensor, step: int) -> torch.Tensor:
         # Im gettign pylint error here dont know why
         out.append(F.conv2d(x[:,c:c+1], kernels_list[step], padding=kernels_list[step].shape[-1]//2))
     return torch.cat(out, dim=1)
+
+import torch
+import torch.nn.functional as F
+import torchvision.transforms.functional as TF
+import math
+
+def swirl_function(x: torch.Tensor, step: int) -> torch.Tensor:
+    B, C, H, W = x.shape
+    out = []
+
+    # Define the swirl strength based on step
+    max_swirl_strength = 3.0  # You can tune this
+    swirl_strength = (step / T_STEPS) * max_swirl_strength
+
+    # Create a normalized coordinate grid
+    yy, xx = torch.meshgrid(
+        torch.linspace(-1, 1, H, device=x.device),
+        torch.linspace(-1, 1, W, device=x.device),
+        indexing='ij'
+    )
+    r = torch.sqrt(xx**2 + yy**2)
+    theta = torch.atan2(yy, xx) + swirl_strength * r
+
+    # Convert polar coords back to cartesian
+    xx_new = r * torch.cos(theta)
+    yy_new = r * torch.sin(theta)
+
+    # Map from [-1,1] to [0,1]
+    grid = torch.stack((xx_new, yy_new), dim=-1)
+
+    for c in range(C):
+        out.append(F.grid_sample(x[:,c:c+1], grid.expand(B, -1, -1, -1), mode='bilinear', padding_mode='border', align_corners=True))
+
+    return torch.cat(out, dim=1)
