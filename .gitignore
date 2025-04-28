@@ -2,6 +2,7 @@ myenv/
 .pycache/
 __pycache__/
 data/
+small_data/
 generated_images/
 *.pyc
 *.pyo

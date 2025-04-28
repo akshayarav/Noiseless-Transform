@@ -13,7 +13,7 @@ import torch.nn as nn
 l1 = nn.L1Loss()
 BATCH_SIZE = 32
 LR = 2e-4
-EPOCHS = 20
+EPOCHS = 10
 IMG_SIZE = 64
 T_STEPS = 300
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
@@ -28,31 +28,23 @@ transform = transforms.Compose([
 
 dataset = torchvision.datasets.CIFAR10(
     root="./small_data",
-    train=True,
+    train=True,          # <-- NOT split="train"
     download=True,
     transform=transform
 )
-loader = DataLoader(dataset, batch_size=BATCH_SIZE, shuffle=True, num_workers=2)
+loader = DataLoader(dataset, batch_size=BATCH_SIZE, shuffle=True, num_workers=4)
 
 model = SimpleUNet(in_channels=3, time_dim=32).to(DEVICE)
 optimizer = optim.Adam(model.parameters(), lr=LR)
-l1 = nn.L1Loss()
 
-latest_ckpt = os.path.join(OUTPUT_FOLDER, "unet_latest.pth")
-if os.path.isfile(latest_ckpt):
-    model.load_state_dict(torch.load(latest_ckpt, map_location=DEVICE))
-    print(f"Loaded model from checkpoint: {latest_ckpt}")
 
 def train():
     for epoch in range(EPOCHS):
         model.train()
         for i, (x0, _) in enumerate(loader):
             x0 = x0.to(DEVICE)
-            s = torch.randint(1, T_STEPS + 1, (x0.size(0),), device=DEVICE)
-            xs = torch.stack([
-                swirl_function(img.unsqueeze(0), step.item())[0]
-                for img, step in zip(x0, s)
-            ], dim=0)
+            s = torch.randint(1, T_STEPS+1, (x0.size(0),), device=DEVICE)
+            xs = torch.stack([swirl_function(x.unsqueeze(0), step.item())[0] for x, step in zip(x0, s)], dim=0)
 
             x_pred = model(xs, s)
             loss = l1(x_pred, x0)
@@ -65,11 +57,6 @@ def train():
                 print(f"Epoch [{epoch}/{EPOCHS}] Batch [{i}/{len(loader)}] Loss: {loss.item():.4f}")
 
         save_generated_images(epoch, loader)
-        epoch_ckpt = os.path.join(OUTPUT_FOLDER, f"unet_epoch_{epoch}.pth")
-        torch.save(model.state_dict(), epoch_ckpt)
-        torch.save(model.state_dict(), latest_ckpt)
-        print(f"Saved checkpoint: {epoch_ckpt}")
-
 
 def save_generated_images(epoch, data_loader):
     model.eval()
@@ -78,7 +65,6 @@ def save_generated_images(epoch, data_loader):
         x0 = x0.to(DEVICE)
         s_full = torch.full((x0.size(0),), T_STEPS, device=DEVICE)
         x = torch.stack([swirl_function(img.unsqueeze(0), step.item())[0] for img, step in zip(x0, s_full)], dim=0)
-
         for s in reversed(range(1, T_STEPS + 1)):
             s_tensor = torch.full((x.size(0),), s, device=DEVICE)
             x0_hat = model(x, s_tensor)
