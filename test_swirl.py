@@ -1,80 +1,64 @@
+import matplotlib.pyplot as plt
 import torch
-import torch.nn as nn
-import torch.optim as optim
-from torch.utils.data import DataLoader
-import torchvision
-import torchvision.transforms as transforms
-from torchvision.utils import save_image
-import os
+from torchvision import datasets, transforms
 from kernel import swirl_function
-from model import SimpleUNet
-import torch.nn as nn
-
-l1 = nn.L1Loss()
-BATCH_SIZE = 32
-LR = 2e-4
-EPOCHS = 10
-IMG_SIZE = 64
-T_STEPS = 300
-DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
-OUTPUT_FOLDER = "generated_images"
-os.makedirs(OUTPUT_FOLDER, exist_ok=True)
-
-transform = transforms.Compose([
-    transforms.CenterCrop(140),
-    transforms.Resize((IMG_SIZE, IMG_SIZE)),
-    transforms.ToTensor(),
-])
-
-dataset = torchvision.datasets.CIFAR10(
-    root="./small_data",
-    train=True,          # <-- NOT split="train"
-    download=True,
-    transform=transform
-)
-loader = DataLoader(dataset, batch_size=BATCH_SIZE, shuffle=True, num_workers=4)
-
-model = SimpleUNet(in_channels=3, time_dim=32).to(DEVICE)
-optimizer = optim.Adam(model.parameters(), lr=LR)
 
 
-def train():
-    for epoch in range(EPOCHS):
-        model.train()
-        for i, (x0, _) in enumerate(loader):
-            x0 = x0.to(DEVICE)
-            s = torch.randint(1, T_STEPS+1, (x0.size(0),), device=DEVICE)
-            xs = torch.stack([swirl_function(x.unsqueeze(0), step.item())[0] for x, step in zip(x0, s)], dim=0)
+def test_swirl_function(swirl_function, step=100):
+    # Load a simple test image (like one CIFAR10 image)
+    transform = transforms.Compose([
+        transforms.Resize((64, 64)),
+        transforms.ToTensor()
+    ])
+    dataset = datasets.CelebA(root="./data", split="train", download=True, transform=transform)
+    loader = torch.utils.data.DataLoader(dataset, batch_size=1, shuffle=True)
+    
+    x0, _ = next(iter(loader))  # get one image
+    x0 = x0.to("cpu")
 
-            x_pred = model(xs, s)
-            loss = l1(x_pred, x0)
+    # Apply swirl function
+    swirled_img = swirl_function(x0, step)  # Assuming swirl_function returns (output, _)
 
-            optimizer.zero_grad()
-            loss.backward()
-            optimizer.step()
+    # Plot original and swirled side by side
+    fig, axes = plt.subplots(1, 2, figsize=(8, 4))
+    axes[0].imshow(x0.squeeze(0).permute(1, 2, 0).numpy())
+    axes[0].set_title("Original Image")
+    axes[0].axis('off')
 
-            if i % 100 == 0:
-                print(f"Epoch [{epoch}/{EPOCHS}] Batch [{i}/{len(loader)}] Loss: {loss.item():.4f}")
+    axes[1].imshow(swirled_img.squeeze(0).permute(1, 2, 0).numpy())
+    axes[1].set_title(f"Swirled Image (step={step})")
+    axes[1].axis('off')
 
-        save_generated_images(epoch, loader)
+    plt.show()
 
-def save_generated_images(epoch, data_loader):
-    model.eval()
-    with torch.no_grad():
-        x0, _ = next(iter(data_loader))
-        x0 = x0.to(DEVICE)
-        s_full = torch.full((x0.size(0),), T_STEPS, device=DEVICE)
-        x = torch.stack([swirl_function(img.unsqueeze(0), step.item())[0] for img, step in zip(x0, s_full)], dim=0)
-        for s in reversed(range(1, T_STEPS + 1)):
-            s_tensor = torch.full((x.size(0),), s, device=DEVICE)
-            x0_hat = model(x, s_tensor)
-            D_s = torch.stack([swirl_function(img.unsqueeze(0), s)[0] for img in x0_hat], dim=0)
-            D_s_minus_1 = torch.stack([swirl_function(img.unsqueeze(0), s-1)[0] for img in x0_hat], dim=0)
-            x = x - D_s + D_s_minus_1
-        save_image(x.cpu(), os.path.join(OUTPUT_FOLDER, f"sample_epoch_{epoch}.png"), nrow=4, normalize=True)
+test_swirl_function(swirl_function, 1000)
+# import matplotlib.pyplot as plt
+# import torchvision
+# import torchvision.transforms as transforms
+# import torch
 
+# # Define transform
+# transform = transforms.Compose([
+#     transforms.Resize((64, 64)),  # Resize to 64x64
+#     transforms.ToTensor()
+# ])
 
+# # Load CIFAR-10 dataset
+# dataset = torchvision.datasets.CIFAR10(
+#     root="./data", train=True, download=True, transform=transform
+# )
 
+# # Create DataLoader
+# loader = torch.utils.data.DataLoader(dataset, batch_size=2, shuffle=True)
 
-if __name__ == "__main__":
-    train()
+# # Get two images
+# images, labels = next(iter(loader))  # images: (2, 3, 64, 64)
+
+# # Plot the two images
+# fig, axes = plt.subplots(1, 2, figsize=(8, 4))
+# for idx in range(2):
+#     img = images[idx].permute(1, 2, 0).numpy()  # (64, 64, 3)
+#     axes[idx].imshow(img)
+#     axes[idx].set_title(f"Label: {labels[idx].item()}")
+#     axes[idx].axis('off')
+# plt.show()

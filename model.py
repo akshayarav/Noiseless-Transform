@@ -26,9 +26,10 @@ class SimpleUNet(nn.Module):
         t_emb = self.time_emb(s.float() / T_STEPS)  
         t_emb = self.time_mlp(t_emb) 
         
-        h = torch.relu(self.down1(x))
-        h = torch.relu(self.down2(h) + t_emb.view(-1, t_emb.shape[-1], 1, 1))
+        h1 = torch.relu(self.down1(x))
+        h2 = torch.relu(self.down2(h) + t_emb.view(-1, t_emb.shape[-1], 1, 1))
         h = torch.relu(self.up1(h))
+        h = torch.cat([h, h1], dim=1)
         return self.up2(h)
 
     
