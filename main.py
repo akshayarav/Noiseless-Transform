@@ -24,12 +24,17 @@ transform = transforms.Compose([
     transforms.ToTensor(),
 ])
 
-dataset = torchvision.datasets.CelebA(root="./data", split="train", download=True, transform=transform)
+dataset = torchvision.datasets.CIFAR10(
+    root="./small_data",
+    train=True,          # <-- NOT split="train"
+    download=True,
+    transform=transform
+)
 loader = DataLoader(dataset, batch_size=BATCH_SIZE, shuffle=True, num_workers=4)
 
 model = SimpleUNet(in_channels=3, time_dim=32).to(DEVICE)
 optimizer = optim.Adam(model.parameters(), lr=LR)
-l1 = nn.L1Loss()
+
 
 def train():
     for epoch in range(EPOCHS):
@@ -49,7 +54,7 @@ def train():
             if i % 100 == 0:
                 print(f"Epoch [{epoch}/{EPOCHS}] Batch [{i}/{len(loader)}] Loss: {loss.item():.4f}")
 
-        save_generated_images(epoch)
+        save_generated_images(epoch, loader)
 
 def save_generated_images(epoch, data_loader):
     model.eval()
@@ -64,7 +69,7 @@ def save_generated_images(epoch, data_loader):
             s = torch.full((x.size(0),), step, device=DEVICE)
             x = model(x, s)
 
-        save_image(x, os.path.join(OUTPUT_FOLDER, "sample_epoch_{epoch}.png"), nrow=4, normalize=True)
+        save_image(x.cpu(), os.path.join(OUTPUT_FOLDER, "sample_epoch_{epoch}.png"), nrow=4, normalize=True)
 
 
 

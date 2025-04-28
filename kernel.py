@@ -36,12 +36,8 @@ import math
 def swirl_function(x: torch.Tensor, step: int) -> torch.Tensor:
     B, C, H, W = x.shape
     out = []
-
-    # Define the swirl strength based on step
-    max_swirl_strength = 3.0  # You can tune this
+    max_swirl_strength = 3.0
     swirl_strength = (step / T_STEPS) * max_swirl_strength
-
-    # Create a normalized coordinate grid
     yy, xx = torch.meshgrid(
         torch.linspace(-1, 1, H, device=x.device),
         torch.linspace(-1, 1, W, device=x.device),
@@ -49,12 +45,8 @@ def swirl_function(x: torch.Tensor, step: int) -> torch.Tensor:
     )
     r = torch.sqrt(xx**2 + yy**2)
     theta = torch.atan2(yy, xx) + swirl_strength * r
-
-    # Convert polar coords back to cartesian
     xx_new = r * torch.cos(theta)
     yy_new = r * torch.sin(theta)
-
-    # Map from [-1,1] to [0,1]
     grid = torch.stack((xx_new, yy_new), dim=-1)
 
     for c in range(C):

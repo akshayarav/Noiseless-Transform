@@ -1,6 +1,8 @@
 myenv/
 .pycache/
 __pycache__/
+data/
+generated_images/
 *.pyc
 *.pyo
 *.pyd
