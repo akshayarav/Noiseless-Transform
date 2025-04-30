@@ -2,7 +2,7 @@ import math
 import torch.nn.functional as F
 import torch
 
-T_STEPS    = 300  
+T_STEPS    = 200  
     #   We can reduce this if too many steps slows training, but thats what was in paper
 DEVICE     = "cuda" if torch.cuda.is_available() else "cpu"
 sigmas = [math.exp(0.01 * s) for s in range(T_STEPS+1)]  
@@ -21,12 +21,11 @@ def gaussian_kernel(sigma: float, kernel_size=27):
 kernels_list = [gaussian_kernel(sigmas[s]).to(DEVICE) for s in range(T_STEPS+1)]
 
 def blur_function(x: torch.Tensor, step: int) -> torch.Tensor:
-    B,C,H,W = x.shape
-    out = []
-    for c in range(C):
-        # Im gettign pylint error here dont know why
-        out.append(F.conv2d(x[:,c:c+1], kernels_list[step], padding=kernels_list[step].shape[-1]//2))
-    return torch.cat(out, dim=1)
+    B, C, H, W = x.shape
+    kernel = kernels_list[step]  # shape: (1, 1, k, k)
+    kernel = kernel.expand(C, 1, -1, -1)  # shape: (C, 1, k, k)
+    return F.conv2d(x, kernel, padding=kernel.shape[-1] // 2, groups=C)
+
 
 import torch
 import torch.nn.functional as F
