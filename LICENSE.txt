@@ -1,0 +1,2 @@
+ A file specifying the license under which your code is released (e.g., MIT,
+Apache 2.0).
