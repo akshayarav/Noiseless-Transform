@@ -1,32 +1,39 @@
 
-Inroduction: 
-This github is our reimplementation of the Noiseless Transfrom Paper. The Noiseless Transform Paper implements diffusion without stochastic noise instead 
-opting for fixed degradation operations liek blurring, snowing, and pixelation. 
+Introduction:
+This GitHub repo contains our reimplementation of the Noiseless Transform paper. The paper replaces stochastic noise in diffusion with fixed degradation operations like blurring, snowing, and pixelation.
 
-Chosen Result: 
-We focus on reproducing Figure 3 in the paper. Specifically we trained our model to reconstruct images that have been severely blurred and tested its 
-abillity to reconstruct these iamges, 
+Chosen Result:
+We reproduce Figure 3 by training our model to reconstruct severely blurred images and evaluating its ability to restore them.
 
-Github Contents: 
-Our github has four main folders code, poster, report, results. The code folder has our all of our code for training, and evaluation. The poster folder has our poster, and the 
-report folder has our report. The evlauation folder has some sampled images our model was able to unblur. 
+GitHub Contents:
+Our repo has four main folders—code, poster, report, and results.
 
-Reimplementation Details: 
-We embed time steps via sinusoidal positional embeddings and a two-layer MLP to condition each ConvNext block. 
-The U Net backbone downsamples with ConvNext blocks and linear attention, then upsamples with skip connections and a final ConvNext head, training on randomly blurred inputs with L1 loss and Adam.
-We made the Unet less complext by breaking large convulutional kernels into smaller kernels and reducing the amount of downsampling and upsampling layers to 
-help reduce the computational complexity of the model. 
+code/ contains all training and evaluation scripts
 
-Reprodcution Steps: 
-TODO
+poster/ holds the project poster
 
-Results: 
-TODO paste
+report/ includes the final write-up
 
-Conclusion: 
-Our model shows significant abillity to regenerate heavily blurred images to their original version. We learned kernel implentation significantly matters as 
-our early effors to make a "swish kernel" was significantly less performant then the blur kernel. For future work, we are heavily interested in seeing how 
-the model fairs for cold generation and suspect it might suffer heavy mode collapse akin to GAN's. 
-References: 
-Our work is based on Cold Diffusion: Inverting Arbitrary Image Transforms Without Noise 
+results/ shows sampled images that our model successfully unblurred
 
+Reimplementation Details:
+We embed time steps with sinusoidal positional embeddings and a two-layer MLP to condition each ConvNext block. The U-Net backbone downsamples with ConvNext blocks and linear attention, then upsamples with skip connections and a final ConvNext head, training on randomly blurred inputs using L1 loss and Adam. To reduce computational complexity, we replaced large convolutional kernels with smaller ones and reduced the number of downsampling/upsampling layers.
+
+Reproduction Steps:
+
+Clone the repo and install dependencies
+
+In the code/ folder, run:
+python main.py        # to train the model
+python eval.py        # to compute FID using saved weights
+Results:
+<img width="405" alt="PNG image" src="https://github.com/user-attachments/assets/44a469f6-cbfc-4920-ab9c-5cde216f39be" />
+
+Sample Blurred Images and Reconstructions:
+<img width="611" alt="image" src="https://github.com/user-attachments/assets/0a3ca765-dc1a-452e-8436-ecc434a7a625" />
+
+Conclusion:
+Our model demonstrates strong ability to regenerate heavily blurred images. We found that kernel implementation significantly impacts performance—our initial “swish kernel” underperformed compared to the blur kernel. Future work will explore cold generation, where we suspect the model may experience mode collapse similar to GANs.
+
+References:
+Cold Diffusion: Inverting Arbitrary Image Transforms Without Noise.
