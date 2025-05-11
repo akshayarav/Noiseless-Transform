@@ -1,4 +1,3 @@
-
 Introduction:
 This GitHub repo contains our reimplementation of the Noiseless Transform paper. The paper replaces stochastic noise in diffusion with fixed degradation operations like blurring, snowing, and pixelation.
 
@@ -37,3 +36,4 @@ Our model demonstrates strong ability to regenerate heavily blurred images. We f
 
 References:
 Cold Diffusion: Inverting Arbitrary Image Transforms Without Noise.
+
