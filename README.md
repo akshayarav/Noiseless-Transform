@@ -15,6 +15,17 @@ report/ includes the final write-up
 
 results/ shows sampled images that our model successfully unblurred
 
+Data is pulled from the code, in the following lines in main.py:
+
+`
+dataset = torchvision.datasets.STL10(
+    root="./data",
+    split="train",
+    download=True,
+    transform=transform  # ✅ use the variable you defined above
+)
+`
+
 Reimplementation Details:
 We embed time steps with sinusoidal positional embeddings and a two-layer MLP to condition each ConvNext block. The U-Net backbone downsamples with ConvNext blocks and linear attention, then upsamples with skip connections and a final ConvNext head, training on randomly blurred inputs using L1 loss and Adam. To reduce computational complexity, we replaced large convolutional kernels with smaller ones and reduced the number of downsampling/upsampling layers.
 
