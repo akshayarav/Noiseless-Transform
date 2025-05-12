@@ -31,7 +31,7 @@ dataset = torchvision.datasets.STL10(
     root="./data",
     split="train",
     download=True,
-    transform=transform  # ✅ use the variable you defined above
+    transform=transform 
 )
 
 loader = DataLoader(dataset, batch_size=BATCH_SIZE, shuffle=True, num_workers=4)
